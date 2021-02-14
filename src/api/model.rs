@@ -1,18 +1,14 @@
-// use chrono::{DateTime, Utc};
-use juniper::futures::TryFutureExt;
-//use juniper::{GraphQLEnum, GraphQLInputObject, GraphQLObject};
+// use juniper::futures::TryFutureExt;
 use juniper::GraphQLObject;
 use serde::{Deserialize, Serialize};
-// use slog::info;
 use snafu::ResultExt;
 use sqlx::Connection;
 use std::convert::TryFrom;
-// use uuid::Uuid;
 
 use crate::api::gql::Context;
 use crate::db::model as db;
 use crate::db::model::ProvideStock;
-use crate::db::Db;
+// use crate::db::Db;
 use crate::error;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, GraphQLObject)]
@@ -79,13 +75,13 @@ pub async fn list_currencies(
     async move {
         let pool = &context.state.pool;
 
-        let mut tx = pool
-            .conn()
-            .and_then(Connection::begin)
-            .await
-            .context(error::DBError {
-                msg: "could not initiate transaction",
-            })?;
+        let mut conn = pool.acquire().await.context(error::DBError {
+            msg: "could not acquire connection",
+        })?;
+
+        let mut tx = conn.begin().await.context(error::DBError {
+            msg: "could not initiate transaction",
+        })?;
 
         let entities = tx.list_currencies().await.context(error::DBProvideError {
             msg: "Could not get all them currencies",

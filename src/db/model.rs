@@ -61,7 +61,7 @@ impl From<sqlx::Error> for ProvideError {
         match e {
             sqlx::Error::RowNotFound => ProvideError::NotFound,
             sqlx::Error::Database(db_err) => {
-                if let Some(pg_err) = db_err.try_downcast_ref::<sqlx::postgres::PgError>() {
+                if let Some(pg_err) = db_err.try_downcast_ref::<sqlx::postgres::PgDatabaseError>() {
                     if let Ok(provide_err) = ProvideError::try_from(pg_err) {
                         provide_err
                     } else {

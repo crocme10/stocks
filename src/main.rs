@@ -1,4 +1,9 @@
 use clap::{App, Arg, SubCommand};
+// use tracing_actix_web::TracingLogger;
+use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
+use tracing_log::LogTracer;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::{EnvFilter, Registry};
 
 mod init;
 mod server;
@@ -57,6 +62,17 @@ async fn main() -> Result<(), error::Error> {
                 .author("Matthieu Paindavoine <matt@area403.org>"),
         )
         .get_matches();
+
+    LogTracer::init().expect("Unable to setup log tracer!");
+
+    let app_name = concat!(env!("CARGO_PKG_NAME"), "-", env!("CARGO_PKG_VERSION")).to_string();
+    let (non_blocking_writer, _guard) = tracing_appender::non_blocking(std::io::stdout());
+    let bunyan_formatting_layer = BunyanFormattingLayer::new(app_name, non_blocking_writer);
+    let subscriber = Registry::default()
+        .with(EnvFilter::new("INFO"))
+        .with(JsonStorageLayer)
+        .with(bunyan_formatting_layer);
+    tracing::subscriber::set_global_default(subscriber).unwrap();
 
     match matches.subcommand() {
         ("run", Some(_)) => server::run(&matches).await,

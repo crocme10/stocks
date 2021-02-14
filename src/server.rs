@@ -1,8 +1,9 @@
 use clap::ArgMatches;
 use juniper_warp::playground_filter;
-use slog::{debug, info};
 use snafu::ResultExt;
 use std::net::ToSocketAddrs;
+use tracing::{debug, info, instrument};
+
 use warp::{self, Filter};
 
 use stocks::api::gql;
@@ -17,9 +18,10 @@ pub async fn run<'a>(matches: &ArgMatches<'a>) -> Result<(), error::Error> {
     run_server(state).await
 }
 
+#[instrument]
 pub async fn run_server(state: State) -> Result<(), error::Error> {
     // We keep a copy of the logger before the context takes ownership of it.
-    debug!(state.logger, "Entering server");
+    debug!("Entering server");
     let state1 = state.clone();
     let qm_state1 = warp::any().map(move || gql::Context {
         state: state1.clone(),
@@ -61,7 +63,7 @@ pub async fn run_server(state: State) -> Result<(), error::Error> {
             msg: String::from("Cannot resolve addr"),
         })?;
 
-    info!(state.logger, "Serving journal");
+    info!("Serving stocks on {}", addr);
     warp::serve(routes).run(addr).await;
 
     Ok(())
