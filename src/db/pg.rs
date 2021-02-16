@@ -1,19 +1,12 @@
 use async_trait::async_trait;
-// use snafu::ResultExt;
-// use sqlx::error::DatabaseError;
 use sqlx::pool::PoolConnection;
 use sqlx::postgres::{PgDatabaseError, PgRow, Postgres};
 use sqlx::{FromRow, Row};
 use sqlx::{PgConnection, PgPool};
 use std::convert::TryFrom;
-// use std::process::Stdio;
-//use tokio::io::{AsyncBufReadExt, BufReader};
-// use tokio::process::Command;
-// use tracing::{debug, info};
 
 use super::model;
 use super::Db;
-// use crate::error;
 
 // This should match the information in api.currency_type
 impl<'c> FromRow<'c, PgRow> for model::CurrencyEntity {

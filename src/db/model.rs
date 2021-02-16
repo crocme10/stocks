@@ -1,17 +1,6 @@
 use async_trait::async_trait;
-// use chrono::{DateTime, Utc};
 use snafu::Snafu;
 use std::convert::TryFrom;
-// use uuid::Uuid;
-
-// pub type EntityId = Uuid;
-
-// #[derive(Debug, sqlx::Type)]
-// #[sqlx(rename = "kind", rename_all = "lowercase")]
-// pub enum DocKind {
-//     Doc,
-//     Post,
-// }
 
 #[derive(Debug)]
 pub struct CurrencyEntity {
