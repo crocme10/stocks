@@ -1,17 +1,25 @@
 use clap::{App, Arg, SubCommand};
-// use tracing_actix_web::TracingLogger;
+use snafu::{ResultExt, Snafu};
 use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
 use tracing_log::LogTracer;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::{EnvFilter, Registry};
 
-mod init;
 mod server;
 
-use stocks::error;
+#[derive(Debug, Snafu)]
+pub enum Error {
+    #[snafu(display("Command Line Interface Error: {}", msg))]
+    CLIError { msg: String },
+    #[snafu(display("Server Error: {}", source))]
+    ServerError {
+        #[snafu(backtrace)]
+        source: server::Error,
+    },
+}
 
 #[tokio::main]
-async fn main() -> Result<(), error::Error> {
+async fn main() -> Result<(), Error> {
     let matches = App::new("Microservice for stocks")
         .version("0.1")
         .author("Matthieu Paindavoine")
@@ -75,10 +83,8 @@ async fn main() -> Result<(), error::Error> {
     tracing::subscriber::set_global_default(subscriber).unwrap();
 
     match matches.subcommand() {
-        ("run", Some(_)) => server::run(&matches).await,
-        ("init", Some(_)) => init::init(&matches).await,
-        // ("test", Some(sm)) => test::test(sm, logger).await,
-        _ => Err(error::Error::MiscError {
+        ("run", Some(_)) => server::run(&matches).await.context(ServerError),
+        _ => Err(Error::CLIError {
             msg: String::from("Unrecognized subcommand"),
         }),
     }

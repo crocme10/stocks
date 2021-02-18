@@ -1,15 +1,13 @@
-// use juniper::futures::TryFutureExt;
 use juniper::GraphQLObject;
 use serde::{Deserialize, Serialize};
 use snafu::ResultExt;
 use sqlx::Connection;
 use std::convert::TryFrom;
 
+use super::error;
 use crate::api::gql::Context;
 use crate::db::model as db;
 use crate::db::model::ProvideStock;
-// use crate::db::Db;
-use crate::error;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, GraphQLObject)]
 #[serde(rename_all = "camelCase")]
@@ -75,11 +73,11 @@ pub async fn list_currencies(
     async move {
         let pool = &context.state.pool;
 
-        let mut conn = pool.acquire().await.context(error::DBError {
+        let mut conn = pool.acquire().await.context(error::DBConnectionError {
             msg: "could not acquire connection",
         })?;
 
-        let mut tx = conn.begin().await.context(error::DBError {
+        let mut tx = conn.begin().await.context(error::DBTransactionError {
             msg: "could not initiate transaction",
         })?;
 
@@ -89,7 +87,7 @@ pub async fn list_currencies(
 
         let currencies = entities.into_iter().map(Currency::from).collect::<Vec<_>>();
 
-        tx.commit().await.context(error::DBError {
+        tx.commit().await.context(error::DBTransactionError {
             msg: "could not commit transaction",
         })?;
 

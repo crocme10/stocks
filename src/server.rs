@@ -1,25 +1,42 @@
 use clap::ArgMatches;
 use juniper_warp::playground_filter;
-use snafu::ResultExt;
+use snafu::{ResultExt, Snafu};
 use std::net::ToSocketAddrs;
 use tracing::{debug, info, instrument};
 
 use warp::{self, Filter};
 
 use stocks::api::gql;
-use stocks::error;
 use stocks::settings::Settings;
 use stocks::state::State;
 
+#[derive(Debug, Snafu)]
+pub enum Error {
+    #[snafu(display("Could not generate settings: {}", source))]
+    SettingsError {
+        #[snafu(backtrace)]
+        source: stocks::settings::Error,
+    },
+    #[snafu(display("Could not generate state: {}", source))]
+    StateError {
+        #[snafu(backtrace)]
+        source: stocks::state::Error,
+    },
+    #[snafu(display("Socket Addr Error {}", source))]
+    SockAddrError { source: std::io::Error },
+    #[snafu(display("Addr Resolution Error {}", msg))]
+    AddrResolutionError { msg: String },
+}
+
 #[allow(clippy::needless_lifetimes)]
-pub async fn run<'a>(matches: &ArgMatches<'a>) -> Result<(), error::Error> {
-    let settings = Settings::new(matches)?;
-    let state = State::new(&settings).await?;
+pub async fn run<'a>(matches: &ArgMatches<'a>) -> Result<(), Error> {
+    let settings = Settings::new(matches).context(SettingsError)?;
+    let state = State::new(&settings).await.context(StateError)?;
     run_server(state).await
 }
 
 #[instrument]
-pub async fn run_server(state: State) -> Result<(), error::Error> {
+pub async fn run_server(state: State) -> Result<(), Error> {
     // We keep a copy of the logger before the context takes ownership of it.
     debug!("Entering server");
     let state1 = state.clone();
@@ -55,11 +72,9 @@ pub async fn run_server(state: State) -> Result<(), error::Error> {
     let addr = (host.as_str(), port);
     let addr = addr
         .to_socket_addrs()
-        .context(error::IOError {
-            msg: String::from("To Sock Addr"),
-        })?
+        .context(SockAddrError)?
         .next()
-        .ok_or(error::Error::MiscError {
+        .ok_or(Error::AddrResolutionError {
             msg: String::from("Cannot resolve addr"),
         })?;
 
