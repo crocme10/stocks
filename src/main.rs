@@ -57,18 +57,6 @@ async fn main() -> Result<(), Error> {
                         .help("Port"),
                 ),
         )
-        .subcommand(
-            SubCommand::with_name("init")
-                .about("Initialize Database")
-                .version("0.1")
-                .author("Matthieu Paindavoine <matt@area403.org>"),
-        )
-        .subcommand(
-            SubCommand::with_name("test")
-                .about("Test Something")
-                .version("0.1")
-                .author("Matthieu Paindavoine <matt@area403.org>"),
-        )
         .get_matches();
 
     LogTracer::init().expect("Unable to setup log tracer!");
