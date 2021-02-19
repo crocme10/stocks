@@ -1,20 +1,36 @@
-use juniper::GraphQLObject;
+// use juniper::GraphQLObject;
+use async_graphql::*;
 use serde::{Deserialize, Serialize};
 use snafu::ResultExt;
 use sqlx::Connection;
 use std::convert::TryFrom;
 
 use super::error;
-use crate::api::gql::Context;
 use crate::db::model as db;
 use crate::db::model::ProvideStock;
+use crate::state::State;
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, GraphQLObject)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Currency {
     pub code: String,
     pub name: String,
     pub decimals: i32,
+}
+
+#[Object]
+impl Currency {
+    async fn code(&self) -> &String {
+        &self.code
+    }
+
+    async fn name(&self) -> &String {
+        &self.name
+    }
+
+    async fn decimals(&self) -> &i32 {
+        &self.decimals
+    }
 }
 
 impl From<db::CurrencyEntity> for Currency {
@@ -34,22 +50,8 @@ impl From<db::CurrencyEntity> for Currency {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize, GraphQLObject)]
-#[serde(rename_all = "camelCase")]
-pub struct SingleCurrencyResponseBody {
-    pub currency: Option<Currency>,
-}
-
-impl From<Currency> for SingleCurrencyResponseBody {
-    fn from(currency: Currency) -> Self {
-        Self {
-            currency: Some(currency),
-        }
-    }
-}
-
 /// The response body for multiple documents
-#[derive(Debug, Deserialize, Serialize, GraphQLObject)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MultiCurrenciesResponseBody {
     pub currencies: Vec<Currency>,
@@ -66,12 +68,20 @@ impl From<Vec<Currency>> for MultiCurrenciesResponseBody {
     }
 }
 
+#[Object]
+impl MultiCurrenciesResponseBody {
+    async fn currencies(&self) -> &Vec<Currency> {
+        &self.currencies
+    }
+    async fn currencies_count(&self) -> &i32 {
+        &self.currencies_count
+    }
+}
+
 /// Retrieve all currencies
-pub async fn list_currencies(
-    context: &Context,
-) -> Result<MultiCurrenciesResponseBody, error::Error> {
+pub async fn list_currencies(state: &State) -> Result<MultiCurrenciesResponseBody, error::Error> {
     async move {
-        let pool = &context.state.pool;
+        let pool = &state.pool;
 
         let mut conn = pool.acquire().await.context(error::DBConnectionError {
             msg: "could not acquire connection",

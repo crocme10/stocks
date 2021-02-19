@@ -1,35 +1,32 @@
-use juniper::{EmptyMutation, EmptySubscription, FieldResult, IntoFieldError, RootNode};
+use async_graphql::*;
 use tracing::info;
 
 use crate::api::model;
 use crate::state::State;
 
-#[derive(Debug, Clone)]
-pub struct Context {
-    pub state: State,
-}
-
-impl juniper::Context for Context {}
-
 pub struct Query;
 
-#[juniper::graphql_object(
-    Context = Context
-)]
+#[Object]
 impl Query {
     async fn list_currencies(
         &self,
-        context: &Context,
+        context: &Context<'_>,
     ) -> FieldResult<model::MultiCurrenciesResponseBody> {
         info!("Request for currencies");
-        model::list_currencies(context)
+        model::list_currencies(&get_state_from_context(context))
             .await
-            .map_err(IntoFieldError::into_field_error)
+            .map_err(|e| e.extend())
     }
 }
 
-type Schema = RootNode<'static, Query, EmptyMutation<Context>, EmptySubscription<Context>>;
+pub type StocksSchema = Schema<Query, EmptyMutation, EmptySubscription>;
 
-pub fn schema() -> Schema {
-    Schema::new(Query, EmptyMutation::new(), EmptySubscription::new())
+pub fn schema(state: State) -> StocksSchema {
+    Schema::build(Query, EmptyMutation, EmptySubscription)
+        .data(state)
+        .finish()
+}
+
+pub fn get_state_from_context<'ctx>(context: &'ctx Context) -> &'ctx State {
+    context.data::<State>().expect("Can't get state")
 }

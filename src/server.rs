@@ -1,10 +1,13 @@
+use async_graphql::http::{playground_source, GraphQLPlaygroundConfig};
+// use async_graphql::{EmptyMutation, EmptySubscription, Schema};
+use async_graphql_warp::{BadRequest, Response};
 use clap::ArgMatches;
-use juniper_warp::playground_filter;
+use http::StatusCode;
 use snafu::{ResultExt, Snafu};
+use std::convert::Infallible;
 use std::net::ToSocketAddrs;
 use tracing::{debug, info, instrument};
-
-use warp::{self, Filter};
+use warp::{http::Response as HttpResponse, Filter, Rejection};
 
 use stocks::api::gql;
 use stocks::settings::Settings;
@@ -40,32 +43,39 @@ pub async fn run_server(state: State) -> Result<(), Error> {
     // We keep a copy of the logger before the context takes ownership of it.
     debug!("Entering server");
     let state1 = state.clone();
-    let qm_state1 = warp::any().map(move || gql::Context {
-        state: state1.clone(),
+    // let qm_state1 = warp::any().map(move || gql::Context {
+    //     state: state1.clone(),
+    // });
+
+    let schema = gql::schema(state1);
+
+    let graphql_post = async_graphql_warp::graphql(schema).and_then(
+        |(schema, request): (gql::StocksSchema, async_graphql::Request)| async move {
+            Ok::<_, Infallible>(Response::from(schema.execute(request).await))
+        },
+    );
+
+    let graphql_playground = warp::path::end().and(warp::get()).map(|| {
+        HttpResponse::builder()
+            .header("content-type", "text/html")
+            .body(playground_source(GraphQLPlaygroundConfig::new("/")))
     });
 
-    let qm_schema = gql::schema();
-    let graphql = warp::post()
-        .and(warp::path("graphql"))
-        .and(juniper_warp::make_graphql_filter(
-            qm_schema,
-            qm_state1.boxed(),
-        ));
+    let routes = graphql_playground
+        .or(graphql_post)
+        .recover(|err: Rejection| async move {
+            if let Some(BadRequest(err)) = err.find() {
+                return Ok::<_, Infallible>(warp::reply::with_status(
+                    err.to_string(),
+                    StatusCode::BAD_REQUEST,
+                ));
+            }
 
-    let playground = warp::get()
-        .and(warp::path("playground"))
-        .and(playground_filter("/graphql", Some("/subscriptions")));
-
-    let cors = warp::cors()
-        .allow_any_origin()
-        .allow_methods(vec!["GET", "POST"])
-        .allow_headers(vec!["content-type", "authorization"])
-        .allow_any_origin()
-        .build();
-
-    let log = warp::log("journal::graphql");
-
-    let routes = playground.or(graphql).with(cors).with(log);
+            Ok(warp::reply::with_status(
+                "INTERNAL_SERVER_ERROR".to_string(),
+                StatusCode::INTERNAL_SERVER_ERROR,
+            ))
+        });
 
     let host = state.settings.service.host;
     let port = state.settings.service.port;
