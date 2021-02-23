@@ -67,4 +67,21 @@ impl model::ProvideStock for PgConnection {
 
         Ok(currencies)
     }
+
+    async fn add_currency(
+        &mut self,
+        code: &str,
+        name: &str,
+        decimals: u32,
+    ) -> model::ProvideResult<model::CurrencyEntity> {
+        let currency: model::CurrencyEntity = sqlx::query_as(
+            r#"SELECT * FROM api.add_currency($1::CHAR(3), $2::VARCHAR(255), $3::INTEGER)"#,
+        )
+        .bind(&code)
+        .bind(&name)
+        .bind(&decimals)
+        .fetch_one(self)
+        .await?;
+        Ok(currency)
+    }
 }

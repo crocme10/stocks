@@ -12,6 +12,13 @@ pub struct CurrencyEntity {
 #[async_trait]
 pub trait ProvideStock {
     async fn list_currencies(&mut self) -> ProvideResult<Vec<CurrencyEntity>>;
+
+    async fn add_currency(
+        &mut self,
+        code: &str,
+        name: &str,
+        decimals: u32,
+    ) -> ProvideResult<CurrencyEntity>;
 }
 
 pub type ProvideResult<T> = Result<T, ProvideError>;
