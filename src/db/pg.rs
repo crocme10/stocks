@@ -72,7 +72,7 @@ impl model::ProvideStock for PgConnection {
         &mut self,
         code: &str,
         name: &str,
-        decimals: u32,
+        decimals: i32,
     ) -> model::ProvideResult<model::CurrencyEntity> {
         let currency: model::CurrencyEntity = sqlx::query_as(
             r#"SELECT * FROM api.add_currency($1::CHAR(3), $2::VARCHAR(255), $3::INTEGER)"#,

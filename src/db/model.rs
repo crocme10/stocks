@@ -18,7 +18,7 @@ pub trait ProvideStock {
         &mut self,
         code: &str,
         name: &str,
-        decimals: u32,
+        decimals: i32,
     ) -> ProvideResult<CurrencyEntity>;
 }
 

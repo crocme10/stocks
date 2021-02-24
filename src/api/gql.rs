@@ -59,5 +59,5 @@ where
 struct CurrencyInput {
     code: String,
     name: String,
-    decimals: u32,
+    decimals: i32,
 }

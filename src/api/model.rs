@@ -58,6 +58,6 @@ pub trait StockService {
         &self,
         code: &str,
         name: &str,
-        decimals: u32,
+        decimals: i32,
     ) -> Result<Currency, error::Error>;
 }

@@ -92,3 +92,48 @@ pub async fn run_server(settings: Settings) -> Result<(), Error> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_add_currency() {
+        let mut service = stocks::api::model::MockStockService::new();
+        service
+            .expect_add_currency()
+            .times(1)
+            .returning(|code, name, decimals| {
+                Ok(stocks::api::model::Currency {
+                    code: String::from(code),
+                    name: String::from(name),
+                    decimals,
+                })
+            });
+
+        let schema = gql::schema(service);
+
+        let graphql_post = async_graphql_warp::graphql(schema).and_then(
+            |(schema, request): (gql::StocksSchema, async_graphql::Request)| async move {
+                Ok::<_, Infallible>(Response::from(schema.execute(request).await))
+            },
+        );
+
+        let query = r#" "mutation addCurrency($currency: CurrencyInput!) { addCurrency(currency: $currency) { code, name, decimals } }" "#;
+        let variables = r#" { "code": "EUR", "name": "Euro", "decimals": 2 }"#;
+        let body = format!(
+            r#"{{ "query": {query}, "variables": {{ "currency": {variables} }} }}"#,
+            query = query,
+            variables = variables
+        );
+
+        let res = warp::test::request()
+            .method("POST")
+            .body(body)
+            .reply(&graphql_post)
+            .await;
+
+        assert_eq!(res.status(), 200);
+        assert_eq!(res.body(), "Hello");
+    }
+}

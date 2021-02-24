@@ -49,7 +49,7 @@ impl model::StockService for StockServiceImpl {
         &self,
         code: &str,
         name: &str,
-        decimals: u32,
+        decimals: i32,
     ) -> Result<model::Currency, error::Error> {
         async move {
             let pool = &self.pool;
