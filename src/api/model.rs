@@ -54,4 +54,10 @@ impl From<db::CurrencyEntity> for Currency {
 #[async_trait]
 pub trait StockService {
     async fn list_currencies(&self) -> Result<Vec<Currency>, error::Error>;
+    async fn add_currency(
+        &self,
+        code: &str,
+        name: &str,
+        decimals: u32,
+    ) -> Result<Currency, error::Error>;
 }

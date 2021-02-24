@@ -17,13 +17,31 @@ impl Query {
     }
 }
 
-pub type StocksSchema = Schema<Query, EmptyMutation, EmptySubscription>;
+pub struct Mutation;
+
+#[Object]
+impl Mutation {
+    async fn add_currency(
+        &self,
+        context: &Context<'_>,
+        currency: CurrencyInput,
+    ) -> FieldResult<model::Currency> {
+        info!("Request for adding a currency");
+        let service: &imp::StockServiceImpl = get_service_from_context(context)?;
+        service
+            .add_currency(&currency.code, &currency.name, currency.decimals)
+            .await
+            .map_err(|e| e.extend())
+    }
+}
+
+pub type StocksSchema = Schema<Query, Mutation, EmptySubscription>;
 
 pub fn schema<A>(service: A) -> StocksSchema
 where
     A: model::StockService + Any + Send + Sync,
 {
-    Schema::build(Query, EmptyMutation, EmptySubscription)
+    Schema::build(Query, Mutation, EmptySubscription)
         .data(service)
         .finish()
 }
