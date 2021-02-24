@@ -9,6 +9,7 @@ pub struct CurrencyEntity {
     pub decimals: i32,
 }
 
+#[mockall::automock]
 #[async_trait]
 pub trait ProvideStock {
     async fn list_currencies(&mut self) -> ProvideResult<Vec<CurrencyEntity>>;
@@ -74,4 +75,13 @@ impl From<sqlx::Error> for ProvideError {
             _ => ProvideError::UnHandledError { source: e },
         }
     }
+}
+
+#[cfg(test)]
+mod tests {
+    // use super::*;
+    // use mockall::predicate::*;
+
+    #[tokio::test]
+    async fn test_mocked_add() {}
 }

@@ -1,8 +1,10 @@
 use async_graphql::*;
+use std::any::Any;
 use tracing::info;
 
+use crate::api::imp;
 use crate::api::model;
-use crate::state::State;
+use crate::api::model::StockService;
 
 pub struct Query;
 
@@ -10,43 +12,29 @@ pub struct Query;
 impl Query {
     async fn list_currencies(&self, context: &Context<'_>) -> FieldResult<Vec<model::Currency>> {
         info!("Request for currencies");
-        model::list_currencies(&get_state_from_context(context))
-            .await
-            .map_err(|e| e.extend())
+        let service: &imp::StockServiceImpl = get_service_from_context(context)?;
+        service.list_currencies().await.map_err(|e| e.extend())
     }
 }
 
-pub struct Mutation;
+pub type StocksSchema = Schema<Query, EmptyMutation, EmptySubscription>;
 
-#[Object]
-impl Mutation {
-    async fn add_currency(
-        &self,
-        context: &Context<'_>,
-        currency: CurrencyInput,
-    ) -> FieldResult<model::Currency> {
-        info!("Request for adding a currency {}", &currency.code);
-        model::add_currency(
-            &get_state_from_context(context),
-            &currency.code,
-            &currency.name,
-            currency.decimals,
-        )
-        .await
-        .map_err(|e| e.extend())
-    }
-}
-
-pub type StocksSchema = Schema<Query, Mutation, EmptySubscription>;
-
-pub fn schema(state: State) -> StocksSchema {
-    Schema::build(Query, Mutation, EmptySubscription)
-        .data(state)
+pub fn schema<A>(service: A) -> StocksSchema
+where
+    A: model::StockService + Any + Send + Sync,
+{
+    Schema::build(Query, EmptyMutation, EmptySubscription)
+        .data(service)
         .finish()
 }
 
-pub fn get_state_from_context<'ctx>(context: &'ctx Context) -> &'ctx State {
-    context.data::<State>().expect("Can't get state")
+pub fn get_service_from_context<'ctx, A>(
+    context: &'ctx Context,
+) -> Result<&'ctx A, async_graphql::Error>
+where
+    A: model::StockService + Any + Send + Sync,
+{
+    context.data::<A>()
 }
 
 #[derive(InputObject)]

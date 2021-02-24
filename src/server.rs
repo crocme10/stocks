@@ -4,17 +4,19 @@ use async_graphql_warp::{BadRequest, Response};
 use clap::ArgMatches;
 use http::StatusCode;
 use snafu::{ResultExt, Snafu};
+use sqlx::postgres::PgPool;
 use std::convert::Infallible;
 use std::net::ToSocketAddrs;
-use tracing::{debug, info, instrument};
+use tracing::{info, instrument};
 use warp::{http::Response as HttpResponse, Filter, Rejection};
 
 use stocks::api::gql;
 use stocks::settings::Settings;
-use stocks::state::State;
 
 #[derive(Debug, Snafu)]
 pub enum Error {
+    #[snafu(display("Could not get database pool: {}", source))]
+    DBConnectionError { source: sqlx::Error },
     #[snafu(display("Could not generate settings: {}", source))]
     SettingsError {
         #[snafu(backtrace)]
@@ -34,20 +36,17 @@ pub enum Error {
 #[allow(clippy::needless_lifetimes)]
 pub async fn run<'a>(matches: &ArgMatches<'a>) -> Result<(), Error> {
     let settings = Settings::new(matches).context(SettingsError)?;
-    let state = State::new(&settings).await.context(StateError)?;
-    run_server(state).await
+    run_server(settings).await
 }
 
 #[instrument]
-pub async fn run_server(state: State) -> Result<(), Error> {
-    // We keep a copy of the logger before the context takes ownership of it.
-    debug!("Entering server");
-    let state1 = state.clone();
-    // let qm_state1 = warp::any().map(move || gql::Context {
-    //     state: state1.clone(),
-    // });
+pub async fn run_server(settings: Settings) -> Result<(), Error> {
+    let pool = PgPool::connect(&settings.database.url)
+        .await
+        .context(DBConnectionError)?;
+    let service = stocks::api::imp::StockServiceImpl { pool };
 
-    let schema = gql::schema(state1);
+    let schema = gql::schema(service);
 
     let graphql_post = async_graphql_warp::graphql(schema).and_then(
         |(schema, request): (gql::StocksSchema, async_graphql::Request)| async move {
@@ -77,8 +76,8 @@ pub async fn run_server(state: State) -> Result<(), Error> {
             ))
         });
 
-    let host = state.settings.service.host;
-    let port = state.settings.service.port;
+    let host = settings.service.host;
+    let port = settings.service.port;
     let addr = (host.as_str(), port);
     let addr = addr
         .to_socket_addrs()
