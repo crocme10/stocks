@@ -1,6 +1,4 @@
 use async_graphql::http::{playground_source, GraphQLPlaygroundConfig};
-// use async_graphql::{EmptyMutation, EmptySubscription, Schema};
-use async_graphql_warp::{BadRequest, Response};
 use clap::ArgMatches;
 use http::StatusCode;
 use snafu::{ResultExt, Snafu};
@@ -50,7 +48,9 @@ pub async fn run_server(settings: Settings) -> Result<(), Error> {
 
     let graphql_post = async_graphql_warp::graphql(schema).and_then(
         |(schema, request): (gql::StocksSchema, async_graphql::Request)| async move {
-            Ok::<_, Infallible>(Response::from(schema.execute(request).await))
+            Ok::<_, Infallible>(async_graphql_warp::Response::from(
+                schema.execute(request).await,
+            ))
         },
     );
 
@@ -63,7 +63,7 @@ pub async fn run_server(settings: Settings) -> Result<(), Error> {
     let routes = graphql_playground
         .or(graphql_post)
         .recover(|err: Rejection| async move {
-            if let Some(BadRequest(err)) = err.find() {
+            if let Some(async_graphql_warp::BadRequest(err)) = err.find() {
                 return Ok::<_, Infallible>(warp::reply::with_status(
                     err.to_string(),
                     StatusCode::BAD_REQUEST,
@@ -96,6 +96,8 @@ pub async fn run_server(settings: Settings) -> Result<(), Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::Value;
+    use stocks::api::model;
 
     #[tokio::test]
     async fn test_add_currency() {
@@ -111,11 +113,13 @@ mod tests {
                 })
             });
 
-        let schema = gql::schema(service);
+        let schema = gql::schema(Box::new(service));
 
         let graphql_post = async_graphql_warp::graphql(schema).and_then(
             |(schema, request): (gql::StocksSchema, async_graphql::Request)| async move {
-                Ok::<_, Infallible>(Response::from(schema.execute(request).await))
+                Ok::<_, Infallible>(async_graphql_warp::Response::from(
+                    schema.execute(request).await,
+                ))
             },
         );
 
@@ -127,13 +131,17 @@ mod tests {
             variables = variables
         );
 
-        let res = warp::test::request()
+        let resp = warp::test::request()
             .method("POST")
             .body(body)
             .reply(&graphql_post)
             .await;
 
-        assert_eq!(res.status(), 200);
-        assert_eq!(res.body(), "Hello");
+        assert_eq!(resp.status(), 200);
+        let data = resp.into_body();
+        let v: Value = serde_json::from_slice(&data).expect("json");
+        let c: model::Currency =
+            serde_json::from_value(v["data"]["addCurrency"].to_owned()).expect("currency");
+        assert_eq!(c.code, "EUR");
     }
 }

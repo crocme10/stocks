@@ -1,8 +1,6 @@
 use async_graphql::*;
-use std::any::Any;
 use tracing::info;
 
-use crate::api::imp;
 use crate::api::model;
 use crate::api::model::StockService;
 
@@ -13,7 +11,6 @@ impl Query {
     async fn list_currencies(&self, context: &Context<'_>) -> FieldResult<Vec<model::Currency>> {
         info!("Request for currencies");
         let service = get_service_from_context(context)?;
-
         service.list_currencies().await.map_err(|e| e.extend())
     }
 }
