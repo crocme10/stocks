@@ -44,7 +44,7 @@ pub async fn run_server(settings: Settings) -> Result<(), Error> {
     let pool = PgPool::connect(&settings.database.url)
         .await
         .context(DBConnectionError)?;
-    let service = stocks::api::imp::StockServiceImpl { pool };
+    let service = Box::new(stocks::api::imp::StockServiceImpl { pool });
 
     let schema = gql::schema(service);
 

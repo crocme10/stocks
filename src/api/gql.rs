@@ -12,8 +12,9 @@ pub struct Query;
 impl Query {
     async fn list_currencies(&self, context: &Context<'_>) -> FieldResult<Vec<model::Currency>> {
         info!("Request for currencies");
-        get_service_from_context(context)
-            .map(|service| async { service.list_currencies().await.map_err(|e| e.extend()) })
+        let service = get_service_from_context(context)?;
+
+        service.list_currencies().await.map_err(|e| e.extend())
     }
 }
 
@@ -27,7 +28,8 @@ impl Mutation {
         currency: CurrencyInput,
     ) -> FieldResult<model::Currency> {
         info!("Request for adding a currency");
-        let service: &imp::StockServiceImpl = get_service_from_context(context)?;
+        //let service: &imp::StockServiceImpl = get_service_from_context(context)?;
+        let service = get_service_from_context(context)?;
         service
             .add_currency(&currency.code, &currency.name, currency.decimals)
             .await
@@ -37,22 +39,18 @@ impl Mutation {
 
 pub type StocksSchema = Schema<Query, Mutation, EmptySubscription>;
 
-pub fn schema<A>(service: A) -> StocksSchema
-where
-    A: model::StockService + Any + Send + Sync,
-{
+pub fn schema(service: Box<dyn StockService + Send + Sync>) -> StocksSchema {
     Schema::build(Query, Mutation, EmptySubscription)
         .data(service)
         .finish()
 }
 
-pub fn get_service_from_context<'ctx, A>(
+pub fn get_service_from_context<'ctx>(
     context: &'ctx Context,
-) -> Result<&'ctx A, async_graphql::Error>
+) -> Result<&'ctx Box<dyn StockService + Send + Sync>, async_graphql::Error>
 where
-    A: model::StockService + Any + Send + Sync,
 {
-    context.data::<A>()
+    context.data::<Box<dyn StockService + Send + Sync>>()
 }
 
 #[derive(InputObject)]
