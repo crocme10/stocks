@@ -99,8 +99,7 @@ mod tests {
     use serde_json::Value;
     use stocks::api::model;
 
-    #[tokio::test]
-    async fn test_add_currency() {
+    fn create_test_filter() -> impl Filter {
         let mut service = stocks::api::model::MockStockService::new();
         service
             .expect_add_currency()
@@ -122,7 +121,12 @@ mod tests {
                 ))
             },
         );
+        graphql_post
+    }
 
+    #[tokio::test]
+    async fn test_add_currency() {
+        let graphql_post = create_test_filter();
         let query = r#" "mutation addCurrency($currency: CurrencyInput!) { addCurrency(currency: $currency) { code, name, decimals } }" "#;
         let variables = r#" { "code": "EUR", "name": "Euro", "decimals": 2 }"#;
         let body = format!(
