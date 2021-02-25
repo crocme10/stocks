@@ -56,3 +56,58 @@ struct CurrencyInput {
     name: String,
     decimals: i32,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::model;
+    use super::*;
+    use serde_json::Value;
+    use std::convert::Infallible;
+    use warp::Filter;
+
+    // TODO How to create a function to return graphql_post, so we don't repeat it.
+    #[tokio::test]
+    async fn test_add_currency() {
+        let mut service = model::MockStockService::new();
+        service
+            .expect_add_currency()
+            .times(1)
+            .returning(|code, name, decimals| {
+                Ok(model::Currency {
+                    code: String::from(code),
+                    name: String::from(name),
+                    decimals,
+                })
+            });
+
+        let schema = schema(Box::new(service));
+
+        let graphql_post = async_graphql_warp::graphql(schema).and_then(
+            |(schema, request): (StocksSchema, async_graphql::Request)| async move {
+                Ok::<_, Infallible>(async_graphql_warp::Response::from(
+                    schema.execute(request).await,
+                ))
+            },
+        );
+        let query = r#" "mutation addCurrency($currency: CurrencyInput!) { addCurrency(currency: $currency) { code, name, decimals } }" "#;
+        let variables = r#" { "code": "EUR", "name": "Euro", "decimals": 2 }"#;
+        let body = format!(
+            r#"{{ "query": {query}, "variables": {{ "currency": {variables} }} }}"#,
+            query = query,
+            variables = variables
+        );
+
+        let resp = warp::test::request()
+            .method("POST")
+            .body(body)
+            .reply(&graphql_post)
+            .await;
+
+        assert_eq!(resp.status(), 200);
+        let data = resp.into_body();
+        let v: Value = serde_json::from_slice(&data).expect("json");
+        let c: model::Currency =
+            serde_json::from_value(v["data"]["addCurrency"].to_owned()).expect("currency");
+        assert_eq!(c.code, "EUR");
+    }
+}
