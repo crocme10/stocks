@@ -12,8 +12,8 @@ pub struct Query;
 impl Query {
     async fn list_currencies(&self, context: &Context<'_>) -> FieldResult<Vec<model::Currency>> {
         info!("Request for currencies");
-        let service: &imp::StockServiceImpl = get_service_from_context(context)?;
-        service.list_currencies().await.map_err(|e| e.extend())
+        get_service_from_context(context)
+            .map(|service| async { service.list_currencies().await.map_err(|e| e.extend()) })
     }
 }
 
