@@ -79,4 +79,35 @@ impl model::StockService for StockServiceImpl {
         }
         .await
     }
+
+    /// Find a currency by code
+    async fn find_currency(&self, code: &str) -> Result<Option<model::Currency>, error::Error> {
+        async move {
+            let pool = &self.pool;
+
+            let mut conn = pool.acquire().await.context(error::DBConnectionError {
+                msg: "could not acquire connection",
+            })?;
+
+            let mut tx = conn.begin().await.context(error::DBTransactionError {
+                msg: "could not initiate transaction",
+            })?;
+
+            let entity = tx
+                .find_currency(code)
+                .await
+                .context(error::DBProvideError {
+                    msg: "Could not find currency",
+                })?;
+
+            let currency = entity.map(model::Currency::from);
+
+            tx.commit().await.context(error::DBTransactionError {
+                msg: "could not commit transaction",
+            })?;
+
+            Ok(currency)
+        }
+        .await
+    }
 }

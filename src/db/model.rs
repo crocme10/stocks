@@ -20,6 +20,8 @@ pub trait ProvideStock {
         name: &str,
         decimals: i32,
     ) -> ProvideResult<CurrencyEntity>;
+
+    async fn find_currency(&mut self, code: &str) -> ProvideResult<Option<CurrencyEntity>>;
 }
 
 pub type ProvideResult<T> = Result<T, ProvideError>;

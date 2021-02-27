@@ -84,4 +84,16 @@ impl model::ProvideStock for PgConnection {
         .await?;
         Ok(currency)
     }
+
+    async fn find_currency(
+        &mut self,
+        code: &str,
+    ) -> model::ProvideResult<Option<model::CurrencyEntity>> {
+        let currency: Option<model::CurrencyEntity> =
+            sqlx::query_as(r#"SELECT * FROM api.find_currency_by_code($1::CHAR(3))"#)
+                .bind(&code)
+                .fetch_optional(self)
+                .await?;
+        Ok(currency)
+    }
 }

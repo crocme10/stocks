@@ -13,6 +13,15 @@ impl Query {
         let service = get_service_from_context(context)?;
         service.list_currencies().await.map_err(|e| e.extend())
     }
+    async fn find_currency(
+        &self,
+        context: &Context<'_>,
+        code: String,
+    ) -> FieldResult<Option<model::Currency>> {
+        info!("Request for currency {}", code);
+        let service = get_service_from_context(context)?;
+        service.find_currency(&code).await.map_err(|e| e.extend())
+    }
 }
 
 pub struct Mutation;

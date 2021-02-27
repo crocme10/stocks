@@ -60,4 +60,5 @@ pub trait StockService {
         name: &str,
         decimals: i32,
     ) -> Result<Currency, error::Error>;
+    async fn find_currency(&self, code: &str) -> Result<Option<Currency>, error::Error>;
 }
