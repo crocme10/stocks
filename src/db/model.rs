@@ -78,12 +78,3 @@ impl From<sqlx::Error> for ProvideError {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    // use super::*;
-    // use mockall::predicate::*;
-
-    #[tokio::test]
-    async fn test_mocked_add() {}
-}

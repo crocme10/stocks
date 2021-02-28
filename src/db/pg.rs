@@ -97,3 +97,30 @@ impl model::ProvideStock for PgConnection {
         Ok(currency)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::model::ProvideStock;
+    use sqlx::postgres::PgPoolOptions;
+    use std::time::Duration;
+
+    #[tokio::test]
+    async fn test_add_and_find_currency() {
+        let url = "postgres://bob:secret@localhost:5432/stocks";
+        let pool = PgPoolOptions::new()
+            .connect_timeout(Duration::new(2, 0))
+            .connect(url)
+            .await
+            .expect("Database connection");
+        let mut conn = pool.acquire().await.expect("connection");
+
+        let _currency = conn
+            .add_currency("EUR", "Euro", 2)
+            .await
+            .expect("add currency");
+
+        let currency = conn.find_currency("EUR").await.expect("find currency");
+
+        assert_eq!(currency.unwrap().name, "Euro");
+    }
+}
