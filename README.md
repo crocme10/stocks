@@ -49,19 +49,47 @@ for a little demo
 
 ## Running the tests
 
-Explain how to run the automated tests for this system
+Tests include both unit tests and some integration tests. Some of these tests require the backend database,
+which is available as a docker image.
 
-### Break down into end to end tests
+### Start database backend
 
-Explain what these tests test and why
+Obviously you should make sure you're not targetting some kind of production database...
+We force the user to specify to environment variables for all the tests that actually connect
+to a database:
 
-    Give an example
+- **RUN_MODE** should have the value **TESTING**
+- **DATABASE_TEST_URL**
 
-### And coding style tests
+The database backend is configured with `config/test.env`, which is a dotenv format:
 
-Explain what these tests test and why
+```
+DB_REPO=localhost:5000
+DB_IMAGE=stocks/db
+DB_TAG=0.2.0
+DB_PORT=5431
+```
 
-    Give an example
+Having set proper values for this file, you can now start the database as a daemon:
+
+```shell
+docker-compose -f docker-compose-test.yml --env-file config/test.env up -d
+```
+
+### Execute tests
+
+As mentioned previously, you need to specify both `RUN_MODE=testing`, and `DATABASE_TEST_URL` environment variables:
+
+```
+RUN_MODE=testing DATABASE_TEST_URL=postgres://bob:secret@localhost:5431/stocks cargo test --release
+```
+
+You can target just unit tests by using `--libs`, and integration tests using `--tests`
+
+### Integration tests
+
+Integration tests are written using **cucumber** and **gherkin**. Tests are specified in the `features` directory, and the code for implementing these tests
+are in the `tests` directory. These tests don't start an actual server, but they execute requests against the GraphQL schema, and analyze the results.
 
 ## Deployment
 

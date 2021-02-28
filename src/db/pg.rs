@@ -101,15 +101,16 @@ impl model::ProvideStock for PgConnection {
 #[cfg(test)]
 mod tests {
     use super::model::ProvideStock;
+    use crate::utils::get_database_url;
     use sqlx::postgres::PgPoolOptions;
     use std::time::Duration;
 
     #[tokio::test]
     async fn test_add_and_find_currency() {
-        let url = "postgres://bob:secret@localhost:5432/stocks";
+        let url = get_database_url();
         let pool = PgPoolOptions::new()
             .connect_timeout(Duration::new(2, 0))
-            .connect(url)
+            .connect(&url)
             .await
             .expect("Database connection");
         let mut conn = pool.acquire().await.expect("connection");

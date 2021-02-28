@@ -45,7 +45,7 @@ name = "service"
 path = "src/main.rs"
 
 [[test]]
-name = "cucumber"
+name = "currency"
 harness = false # Allows Cucumber to print output instead of libtest
 
 [dev-dependencies]

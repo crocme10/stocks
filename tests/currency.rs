@@ -4,6 +4,7 @@ use std::convert::Infallible;
 use std::time::Duration;
 
 use stocks::api::{gql, imp};
+use stocks::utils;
 
 pub struct MyWorld {
     schema: gql::StocksSchema,
@@ -12,13 +13,15 @@ pub struct MyWorld {
 
 #[async_trait(?Send)]
 impl cucumber::World for MyWorld {
+    // TODO Can we have another type?
     type Error = Infallible;
 
     async fn new() -> Result<Self, Infallible> {
-        let url = "postgres://bob:secret@localhost:5432/stocks";
+        // TODO Can we make it fail cleanly and informatively
+        let url = utils::get_database_url();
         let pool = PgPoolOptions::new()
             .connect_timeout(Duration::new(2, 0))
-            .connect(url)
+            .connect(&url)
             .await
             .expect("Database connection");
         let service = imp::StockServiceImpl { pool };
