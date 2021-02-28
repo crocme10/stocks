@@ -1,3 +1,4 @@
+use async_graphql::extensions::TracingConfig;
 use async_graphql::http::{playground_source, GraphQLPlaygroundConfig};
 use clap::ArgMatches;
 use http::StatusCode;
@@ -5,7 +6,7 @@ use snafu::{ResultExt, Snafu};
 use sqlx::postgres::PgPool;
 use std::convert::Infallible;
 use std::net::ToSocketAddrs;
-use tracing::{info, instrument};
+use tracing::{info, instrument, span, Level};
 use warp::{http::Response as HttpResponse, Filter, Rejection};
 
 use stocks::api::gql;
@@ -48,13 +49,15 @@ pub async fn run_server(settings: Settings) -> Result<(), Error> {
 
     let graphql_post = async_graphql_warp::graphql(schema).and_then(
         |(schema, request): (gql::StocksSchema, async_graphql::Request)| async move {
+            let root_span = span!(parent: None, Level::INFO, "span root");
+            let request = request.data(TracingConfig::default().parent_span(root_span));
             Ok::<_, Infallible>(async_graphql_warp::Response::from(
                 schema.execute(request).await,
             ))
         },
     );
 
-    let graphql_playground = warp::path::end().and(warp::get()).map(|| {
+    let graphql_playground = warp::path("playground").and(warp::get()).map(|| {
         HttpResponse::builder()
             .header("content-type", "text/html")
             .body(playground_source(GraphQLPlaygroundConfig::new("/")))

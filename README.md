@@ -1,11 +1,6 @@
-# Project Title
+# Stocks GraphQL Service
 
-One Paragraph of project description goes here
-
-This initially appeared on
-[gist](https://gist.github.com/PurpleBooth/109311bb0361f32d87a2), but as
-I can no longer open that page as there are too many comments, I have
-moved it here.
+A GraphQL interface to expose the Stocks Service. The Stocks Service is a toy implementation
 
 ## Summary
 
@@ -46,6 +41,25 @@ And repeat
 
 End with an example of getting some data out of the system or using it
 for a little demo
+
+### Scratching the interface.
+
+This GraphQL interface comes with a playground, which is a GraphQL IDE. This web application allows you to discover the GraphQL schema, and run queries,
+mutations, and subscriptions. It's a very convenient way to test your interface.
+
+The playground is available at `..../playground`.
+
+Another useful tool to test the interface is `curl` (or `wget`).
+
+```
+curl -X POST "http://localhost:8080/graphql" -H 'Content-Type: application/json' --data-binary @payload.json
+```
+
+where the `payload.json`:
+
+```json
+{ "query": "query listCurrencies { listCurrencies { code, name, decimals } }" }
+```
 
 ## Running the tests
 

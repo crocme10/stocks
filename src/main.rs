@@ -61,6 +61,7 @@ async fn main() -> Result<(), Error> {
 
     LogTracer::init().expect("Unable to setup log tracer!");
 
+    // logging from https://betterprogramming.pub/production-grade-logging-in-rust-applications-2c7fffd108a6
     let app_name = concat!(env!("CARGO_PKG_NAME"), "-", env!("CARGO_PKG_VERSION")).to_string();
     let (non_blocking_writer, _guard) = tracing_appender::non_blocking(std::io::stdout());
     let bunyan_formatting_layer = BunyanFormattingLayer::new(app_name, non_blocking_writer);

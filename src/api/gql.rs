@@ -1,18 +1,20 @@
+use async_graphql::extensions::Tracing;
 use async_graphql::*;
-use tracing::info;
+use tracing::{info, instrument};
 
-use crate::api::model;
-use crate::api::model::StockService;
+use crate::api::model::{self, StockService};
 
 pub struct Query;
 
 #[Object]
 impl Query {
+    #[instrument(skip(self, context))]
     async fn list_currencies(&self, context: &Context<'_>) -> FieldResult<Vec<model::Currency>> {
         info!("Request for currencies");
         let service = get_service_from_context(context)?;
         service.list_currencies().await.map_err(|e| e.extend())
     }
+    #[instrument(skip(self, context))]
     async fn find_currency(
         &self,
         context: &Context<'_>,
@@ -28,6 +30,7 @@ pub struct Mutation;
 
 #[Object]
 impl Mutation {
+    #[instrument(skip(self, context))]
     async fn add_currency(
         &self,
         context: &Context<'_>,
@@ -47,6 +50,7 @@ pub type StocksSchema = Schema<Query, Mutation, EmptySubscription>;
 
 pub fn schema(service: Box<dyn StockService + Send + Sync>) -> StocksSchema {
     Schema::build(Query, Mutation, EmptySubscription)
+        .extension(Tracing::default())
         .data(service)
         .finish()
 }
@@ -59,7 +63,7 @@ where
     context.data::<Box<dyn StockService + Send + Sync>>()
 }
 
-#[derive(InputObject)]
+#[derive(Debug, InputObject)]
 struct CurrencyInput {
     code: String,
     name: String,
