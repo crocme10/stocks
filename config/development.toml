@@ -1,6 +1,9 @@
 debug = true
 mode = "development"
 
+[logging]
+path = "/home/matt/var/log"
+
 [database]
 url = "postgres://bob:secret@localhost:5432/stocks"
 

@@ -38,6 +38,11 @@ pub enum Error {
 }
 
 #[derive(Debug, Clone, Deserialize)]
+pub struct Logging {
+    pub path: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
 pub struct Database {
     pub url: String,
 }
@@ -53,6 +58,7 @@ pub struct Settings {
     pub debug: bool,
     pub testing: bool,
     pub mode: String,
+    pub logging: Logging,
     pub database: Database,
     pub service: Service,
 }
