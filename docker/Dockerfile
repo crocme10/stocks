@@ -1,29 +1,37 @@
-FROM rust:1.46-buster as builder
+ARG RUST_VERSION
+ARG DEBIAN_VERSION
 
-RUN USER=root cargo new --lib journal
-WORKDIR ./journal
+FROM rust:${RUST_VERSION}-${DEBIAN_VERSION} as builder
+
+WORKDIR /home
+
+ARG DEBIAN_VERSION
+
+RUN USER=root cargo new stocks
+
+WORKDIR /home/stocks
+
 COPY ./Cargo.toml ./Cargo.toml
+COPY ./Cargo.lock ./Cargo.lock
 
-# clang llvm & Co. to build argonautica
-RUN apt-get update \
-    && apt-get install -y clang llvm-dev libclang-dev \
-    && rm -fr /var/lib/apt/list/*
+RUN echo "// dummy file" > src/lib.rs
+RUN mkdir tests
+RUN echo "// dummy file" > tests/currency.rs
 
-RUN cargo build --release --lib
+RUN cargo build --release
 RUN rm src/*.rs
 
-ADD . ./
+COPY ./src ./src
+COPY ./docker ./docker
+COPY ./config ./config
 
-RUN rm ./target/release/deps/journal*
+RUN rm ./target/release/deps/stocks*
+
 RUN cargo build --release
 
-FROM debian:buster-slim
-ARG APP=/usr/src/app
+ARG DEBIAN_VERSION
 
-RUN apt-get update \
-    && apt-get install -y netcat \
-    && apt-get install -y libssl1.1 \
-    && rm -fr /var/lib/apt/list/*
+FROM debian:${DEBIAN_VERSION}-slim
 
 ENV TZ=Etc/UTC \
     RUN_MODE=development \
@@ -31,16 +39,16 @@ ENV TZ=Etc/UTC \
 
 RUN groupadd $APP_USER \
     && useradd -g $APP_USER $APP_USER \
-    && mkdir -p ${APP}
+    && mkdir -p /opt/stocks \
+    && mkdir -p /etc/opt/stocks
 
-COPY --from=builder /journal/target/release/service ${APP}/service
-COPY --from=builder /journal/config ${APP}/config
-COPY --from=builder /journal/docker/entrypoint.sh ${APP}/entrypoint.sh
-COPY --from=builder /journal/.env ${APP}/.env
+COPY --from=builder /home/stocks/target/release/service /opt/stocks/service
+COPY --from=builder /home/stocks/config /etc/opt/stocks
+COPY --from=builder /home/stocks/docker/entrypoint.sh /opt/stocks/entrypoint.sh
 
-RUN chown -R $APP_USER:$APP_USER ${APP}
+RUN chown -R $APP_USER:$APP_USER /opt/stocks
 
 USER $APP_USER
-WORKDIR ${APP}
+WORKDIR /opt/stocks
 
 CMD ["./entrypoint.sh"]

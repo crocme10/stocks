@@ -55,6 +55,7 @@ pub fn schema(service: Box<dyn StockService + Send + Sync>) -> StocksSchema {
         .finish()
 }
 
+#[allow(clippy::borrowed_box)]
 pub fn get_service_from_context<'ctx>(
     context: &'ctx Context,
 ) -> Result<&'ctx Box<dyn StockService + Send + Sync>, async_graphql::Error>

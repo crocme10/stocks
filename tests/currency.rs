@@ -78,7 +78,7 @@ mod example_steps {
                 |world, _step| {
                     if world.response.is_err() {
                         println!("resp: {:?}", world.response);
-                        println!(""); // TODO Not sure why I need this...
+                        println!(); // TODO Not sure why I need this...
                     }
                     assert!(world.response.is_ok());
                     world
