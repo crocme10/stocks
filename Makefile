@@ -162,8 +162,9 @@ lint: ## Check quality of the code
 	cargo clippy --all-features --all-targets -- --warn clippy::cargo --allow clippy::multiple_crate_versions --deny warnings
 
 test: ## Launch all tests
-	docker-compose -f docker-compose-test.yml --env-file config/test.env up -d # We need to have a test environment
-	RUN_MODE=testing DATABASE_TEST_URL=postgres://bob:secret@localhost:5431/stocks cargo test --tests --release
-	docker-compose -f docker-compose-test.yml --env-file config/test.env down # We need to have a test environment
+	@trap 'docker-compose -f docker-compose-test.yml --env-file config/test.env down'; \
+	docker-compose -f docker-compose-test.yml --env-file config/test.env up -d; \
+	RUN_MODE=testing DATABASE_TEST_URL=postgres://bob:secret@localhost:5431/stocks cargo test --tests --release; \
+	docker-compose -f docker-compose-test.yml --env-file config/test.env down
 
 
