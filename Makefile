@@ -161,9 +161,12 @@ clippy: lint ## Check quality of the code (alias for 'lint')
 lint: ## Check quality of the code
 	cargo clippy --all-features --all-targets -- --warn clippy::cargo --allow clippy::multiple_crate_versions --deny warnings
 
-test: ## Launch all tests
+# So we launch an environment, wait for it to be ready, and then execute all the tests
+# The actual wait is just a sleep, and a script such as 'wait-for-it' might be more appropriate. But we can't rely on it being installed.
+test: ## Launch all tests.
 	@trap 'docker-compose -f docker-compose-test.yml --env-file config/test.env down'; \
 	docker-compose -f docker-compose-test.yml --env-file config/test.env up -d; \
+	sleep 3s; \
 	RUN_MODE=testing DATABASE_TEST_URL=postgres://bob:secret@localhost:5431/stocks cargo test --tests --release; \
 	docker-compose -f docker-compose-test.yml --env-file config/test.env down
 
