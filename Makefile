@@ -20,7 +20,7 @@ help: ## This help.
 RELEASE_SUPPORT := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))/.make-release-support
 
 VERSION=$(shell . $(RELEASE_SUPPORT) ; getVersion)
-DOCKER_IMG=stocks-service
+DOCKER_IMG=graphql
 DOCKER_TAGS=$(shell . $(RELEASE_SUPPORT) ; getDockerTags)
 TAG=$(shell . $(RELEASE_SUPPORT); getTag)
 
