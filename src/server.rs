@@ -43,9 +43,11 @@ pub async fn run<'a>(matches: &ArgMatches<'a>) -> Result<(), Error> {
 
     // following code mostly from https://betterprogramming.pub/production-grade-logging-in-rust-applications-2c7fffd108a6
     let app_name = concat!(env!("CARGO_PKG_NAME"), "-", env!("CARGO_PKG_VERSION")).to_string();
+
     let file_appender = tracing_appender::rolling::daily(&settings.logging.path, "stocks.log");
     let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
-    // let (non_blocking_writer, _guard) = tracing_appender::non_blocking(std::io::stdout());
+    // let (non_blocking, _guard) = tracing_appender::non_blocking(std::io::stdout());
+
     let bunyan_formatting_layer = BunyanFormattingLayer::new(app_name, non_blocking);
     let subscriber = Registry::default()
         .with(EnvFilter::new("INFO"))

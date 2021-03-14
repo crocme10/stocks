@@ -63,19 +63,25 @@ where the `payload.json`:
 
 ## Running the tests
 
-Tests include both unit tests and some integration tests. Some of these tests require the backend database,
-which is available as a docker image.
+Tests include both unit tests and some integration tests. Some of these tests require the backend database, which is available as a docker image.
+
+The easiest way to execute all the tests is to run
+
+```
+make check
+```
+
+The rest of this section explains essentially what this command does.
 
 ### Start database backend
 
-Obviously you should make sure you're not targetting some kind of production database...
-We force the user to specify to environment variables for all the tests that actually connect
-to a database:
+Obviously you should make sure you're not targeting some kind of production database...  We force the user to specify to environment variables for all the tests
+that actually connect to a database:
 
 - **RUN_MODE** should have the value **TESTING**
-- **DATABASE_TEST_URL**
+- **DATABASE_TEST_URL** should be a postgresql connection string, like `postgres://[user]:[passwd]@[host]:[port]/[database]`
 
-The database backend is configured with `config/test.env`, which is a dotenv format:
+The database backend docker image is configured with `config/test.env`, which is a dotenv format:
 
 ```
 DB_REPO=localhost:5000
