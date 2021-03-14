@@ -10,4 +10,4 @@ echo "PostgreSQL started"
 
 echo "Hostname: "
 hostname
-./service run
+./service run -c /etc/opt/stocks

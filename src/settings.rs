@@ -90,7 +90,6 @@ impl Settings {
             })?;
 
         // Add in the current environment file
-        // Default to 'development' env
         // Note that this file is _optional_
         let settings = matches.value_of("settings").ok_or(Error::ArgMissingError {
             msg: String::from("no settings"),
