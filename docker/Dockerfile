@@ -33,6 +33,10 @@ ARG DEBIAN_VERSION
 
 FROM debian:${DEBIAN_VERSION}-slim
 
+RUN apt-get update \
+  && apt-get install -y netcat \
+  && rm -fr /var/lib/apt/list/*
+
 ENV TZ=Etc/UTC \
     RUN_MODE=development \
     APP_USER=appuser
