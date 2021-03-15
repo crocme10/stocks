@@ -1,6 +1,6 @@
 [package]
 name = "stocks"
-version = "0.2.2-rc7"
+version = "0.2.2-rc8"
 authors = ["crocme10 <matt@area403.org>"]
 edition = "2018"
 description = "GraphQL API for documents database"
