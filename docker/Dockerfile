@@ -11,8 +11,7 @@ RUN USER=root cargo new stocks
 
 WORKDIR /home/stocks
 
-COPY ./Cargo.toml ./Cargo.toml
-COPY ./Cargo.lock ./Cargo.lock
+COPY Cargo.toml Cargo.lock ./
 
 RUN echo "// dummy file" > src/lib.rs
 RUN mkdir tests
@@ -26,7 +25,7 @@ COPY ./docker ./docker
 COPY ./config ./config
 
 RUN rm ./target/release/deps/stocks*
-RUN rm ./target/release/deps/service*
+RUN rm ./target/release/deps/libstocks*
 
 RUN cargo build --release
 
@@ -52,6 +51,7 @@ COPY --from=builder /home/stocks/config /etc/opt/stocks
 COPY --from=builder /home/stocks/docker/entrypoint.sh /opt/stocks/entrypoint.sh
 
 RUN chown -R $APP_USER:$APP_USER /opt/stocks
+RUN ls -al /opt/stocks/service
 
 USER $APP_USER
 WORKDIR /opt/stocks
