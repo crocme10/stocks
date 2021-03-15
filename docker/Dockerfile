@@ -26,6 +26,7 @@ COPY ./docker ./docker
 COPY ./config ./config
 
 RUN rm ./target/release/deps/stocks*
+RUN rm ./target/release/deps/service*
 
 RUN cargo build --release
 
