@@ -10,4 +10,4 @@ echo "PostgreSQL started"
 
 echo "Hostname: "
 hostname
-./service -c /etc/opt/stocks run
+./service -c /etc/opt/stocks -s ${RUN_MODE} run
