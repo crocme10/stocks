@@ -1,0 +1,3 @@
+{
+  "query": "query listCurrencies() { code, name, decimals }"
+}

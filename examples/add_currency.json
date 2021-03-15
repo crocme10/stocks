@@ -1,0 +1,4 @@
+{
+  "query": "mutation addCurrency($currency: CurrencyInput!) { addCurrency(currency: $currency) { code, name, decimals } }",
+  "variables": { "currency": { "code": "EUR", "name": "Euro", "decimals": 2 } }
+}
