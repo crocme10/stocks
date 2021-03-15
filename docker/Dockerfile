@@ -33,9 +33,21 @@ ARG DEBIAN_VERSION
 
 FROM debian:${DEBIAN_VERSION}-slim
 
-RUN apt-get update \
-  && apt-get install -y netcat \
-  && rm -fr /var/lib/apt/list/*
+ARG DEBIAN_VERSION
+
+RUN if [ "${DEBIAN_VERSION}" = "buster" ]; then \
+  apt-get update \
+    && apt-get install -y netcat libssl-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*; \
+elif [ "${DEBIAN_VERSION}" = "stretch" ]; then \
+  apt-get update \
+    && apt-get install -y netcat libssl1.0-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*; \
+else \
+  echo "Unsupported debian version '$DEBIAN_VERSION'"; \
+fi
 
 ENV TZ=Etc/UTC \
     RUN_MODE=development \
