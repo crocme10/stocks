@@ -2,7 +2,7 @@ debug = true
 mode = "development"
 
 [logging]
-path = "/home/matt/lab/rust/perso/stocks/logs"
+path = "/var/log/stocks"
 
 [database]
 url = "postgres://bob:secret@localhost:5432/stocks"

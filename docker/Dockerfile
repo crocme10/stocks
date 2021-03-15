@@ -63,7 +63,8 @@ COPY --from=builder /home/stocks/config /etc/opt/stocks
 COPY --from=builder /home/stocks/docker/entrypoint.sh /opt/stocks/entrypoint.sh
 
 RUN chown -R $APP_USER:$APP_USER /opt/stocks
-RUN ls -al /opt/stocks/service
+RUN mkdir /var/log/stocks
+RUN chown -R $APP_USER:$APP_USER /var/log/stocks
 
 USER $APP_USER
 WORKDIR /opt/stocks
