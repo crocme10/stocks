@@ -1,9 +1,12 @@
 debug = true
 mode = "development"
 
+[logging]
+path = "./logs"
+
 [database]
 url = "postgres://bob:secret@localhost:5432/stocks"
 
 [service]
 host = "0.0.0.0"
-port = "7000"
+port = "6010"

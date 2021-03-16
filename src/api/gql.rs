@@ -1,7 +1,7 @@
 use async_graphql::extensions::Tracing;
 use async_graphql::*;
 use tracing::{info, instrument};
-use uuid::Uuid;
+// use uuid::Uuid;
 
 use crate::api::model::{self, StockService};
 
@@ -10,11 +10,11 @@ pub struct Query;
 #[Object]
 impl Query {
     async fn list_currencies(&self, context: &Context<'_>) -> FieldResult<Vec<model::Currency>> {
-        let request_id = Uuid::new_v4();
-        let request_span = tracing::info_span!(
-            "Request currencies list",
-            %request_id);
-        let _request_span_guard = request_span.enter();
+        // let request_id = Uuid::new_v4();
+        // let request_span = tracing::info_span!(
+        //     "Request currencies list",
+        //     %request_id);
+        // let _request_span_guard = request_span.enter();
         let service = get_service_from_context(context)?;
         service.list_currencies().await.map_err(|e| e.extend())
     }
@@ -24,12 +24,12 @@ impl Query {
         context: &Context<'_>,
         code: String,
     ) -> FieldResult<Option<model::Currency>> {
-        let request_id = Uuid::new_v4();
-        let request_span = tracing::info_span!(
-            "Request currency search",
-            %request_id,
-            code = %code);
-        let _request_span_guard = request_span.enter();
+        // let request_id = Uuid::new_v4();
+        // let request_span = tracing::info_span!(
+        //     "Request currency search",
+        //     %request_id,
+        //     code = %code);
+        // let _request_span_guard = request_span.enter();
         let service = get_service_from_context(context)?;
         service.find_currency(&code).await.map_err(|e| e.extend())
     }
@@ -45,7 +45,7 @@ impl Mutation {
         context: &Context<'_>,
         currency: CurrencyInput,
     ) -> FieldResult<model::Currency> {
-        info!("Request for adding a currency");
+        //info!("Request for adding a currency");
         //let service: &imp::StockServiceImpl = get_service_from_context(context)?;
         let service = get_service_from_context(context)?;
         service
