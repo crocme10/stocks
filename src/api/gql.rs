@@ -1,6 +1,6 @@
 use async_graphql::extensions::Tracing;
 use async_graphql::*;
-use tracing::{info, instrument};
+use tracing::instrument;
 // use uuid::Uuid;
 
 use crate::api::model::{self, StockService};
