@@ -89,13 +89,16 @@ impl Settings {
                 msg: String::from("Could not merge default configuration"),
             })?;
 
-        // Add in the current environment file
-        // Note that this file is _optional_
-        let settings = matches.value_of("settings").ok_or(Error::ArgMissingError {
-            msg: String::from("no settings"),
+        // We use the RUN_MODE environment variable, and if not, the command line
+        // argument. If neither is present, we return an error.
+        let settings = env::var("RUN_MODE").or_else(|_| {
+            matches
+                .value_of("settings")
+                .ok_or_else(|| Error::ArgMissingError {
+                    msg: String::from("no settings, you need to set env var RUN_MODE"),
+                })
+                .map(ToOwned::to_owned)
         })?;
-
-        let settings = env::var("RUN_MODE").unwrap_or_else(|_| String::from(settings));
 
         let settings_path = config_dir.join(&settings).with_extension("toml");
 
