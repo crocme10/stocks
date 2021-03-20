@@ -16,7 +16,7 @@ pub enum Error {
     ReqwestError { msg: String, source: reqwest::Error },
 }
 
-const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
