@@ -13,10 +13,12 @@ pub enum Error {
     },
 }
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     let matches = App::new("Microservice for stocks")
-        .version("0.1")
+        .version(VERSION)
         .author("Matthieu Paindavoine")
         .arg(
             Arg::with_name("config dir")
