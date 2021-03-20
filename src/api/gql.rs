@@ -1,7 +1,6 @@
 use async_graphql::extensions::Tracing;
 use async_graphql::*;
 use tracing::instrument;
-// use uuid::Uuid;
 
 use crate::api::model::{self, StockService};
 
@@ -74,10 +73,10 @@ where
 }
 
 #[derive(Debug, InputObject)]
-struct CurrencyInput {
-    code: String,
-    name: String,
-    decimals: i32,
+pub struct CurrencyInput {
+    pub code: String,
+    pub name: String,
+    pub decimals: i32,
 }
 
 #[cfg(test)]
