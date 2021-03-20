@@ -14,6 +14,7 @@ WORKDIR /home/stocks
 COPY Cargo.toml Cargo.lock ./
 
 RUN echo "// dummy file" > src/lib.rs
+RUN echo "// dummy file" > src/client.rs
 RUN mkdir tests
 RUN echo "// dummy file" > tests/currency.rs
 
