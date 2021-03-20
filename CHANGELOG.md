@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 This file is generated automatically by the release procedure, please do not edit.
 
 
+## v0.3.0
+
+Released 2021-03-20T18:29:23Z
+
+
+### Changed:
+- entrypoint msg, crocme10, 2021-03-17, 22c7c39
+- tracing, crocme10, 2021-03-16, 1cf0f28
+- tracing, crocme10, 2021-03-16, e2cedbc
+- working to add tracing, crocme10, 2021-03-15, 42b0511
+
+
+### Fixed:
+- run_mode and settings, crocme10, 2021-03-18, 57c4d96
+
+
 ## v0.2.2
 
 Released 2021-03-15T21:54:59Z
