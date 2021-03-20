@@ -11,8 +11,8 @@ keywords = [ "graphql", "document" ]
 categories = [ "application" ]
 
 [dependencies]
-async-graphql = { version = "2.5.7", features = [ "uuid", "chrono", "tracing" ] }
-async-graphql-warp = "2.5.7"
+async-graphql = { version = "2.6.2", features = [ "uuid", "chrono", "tracing" ] }
+async-graphql-warp = "2.6.2"
 async-trait = "0.1.36"
 chrono = { version = "0.4", features = [ "serde" ] }
 clap = "2.33.1"
