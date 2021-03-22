@@ -1,4 +1,4 @@
-use async_graphql::extensions::TracingConfig;
+// use async_graphql::extensions::Tracing;
 use async_graphql::http::{playground_source, GraphQLPlaygroundConfig};
 use clap::ArgMatches;
 use http::StatusCode;
@@ -6,12 +6,11 @@ use snafu::{ResultExt, Snafu};
 use sqlx::postgres::PgPool;
 use std::convert::Infallible;
 use std::net::ToSocketAddrs;
-use tracing::{info, instrument, span, Level};
+use tracing::{info, instrument};
 use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
 use tracing_log::LogTracer;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::{EnvFilter, Registry};
-use uuid::Uuid;
 use warp::{http::Response as HttpResponse, Filter, Rejection};
 
 use stocks::api::gql;
@@ -70,9 +69,9 @@ pub async fn run_server(settings: Settings) -> Result<(), Error> {
 
     let graphql_post = async_graphql_warp::graphql(schema).and_then(
         |(schema, request): (gql::StocksSchema, async_graphql::Request)| async move {
-            let request_id = Uuid::new_v4();
-            let root_span = span!(parent: None, Level::INFO, "graphql request", %request_id);
-            let request = request.data(TracingConfig::default().parent_span(root_span));
+            // let request_id = Uuid::new_v4();
+            // let root_span = span!(parent: None, Level::INFO, "graphql request", %request_id);
+            // let request = request.data(Tracing::default().parent_span(root_span));
             Ok::<_, Infallible>(async_graphql_warp::Response::from(
                 schema.execute(request).await,
             ))
